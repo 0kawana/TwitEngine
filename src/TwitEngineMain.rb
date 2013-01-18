@@ -1,15 +1,18 @@
+#!/usr/local/bin/ruby
+# encoding : utf-8
+
 #===========================================================
 # TwitEngineMain.rb
 # 本体部分
 #-----------------------------------------------------------
 # Author : gembaf
-# 2013/01/18
+# 2013/01/19
 #===========================================================
 
-require 'rubygems'
-require 'twitter'
-require './define.rb'
-require './TweetWord.rb'
+# 絶対パスでrequire
+require File.expand_path(File.dirname(__FILE__) + '/../mygems/twitter-4.4.4/lib/twitter')
+require File.expand_path(File.dirname(__FILE__) + '/define.rb')
+require File.expand_path(File.dirname(__FILE__) + '/TweetWord.rb')
 
 # configに登録
 Twitter.configure do |config|
