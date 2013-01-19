@@ -1,5 +1,6 @@
 #!/usr/local/bin/ruby
 # encoding : utf-8
+
 #===========================================================
 # TwitEngineMain.rb
 # 本体部分
@@ -11,7 +12,17 @@
 # 絶対パスでrequire
 require File.expand_path(File.dirname(__FILE__) + '/../mygems/twitter-4.4.4/lib/twitter')
 require File.expand_path(File.dirname(__FILE__) + '/define.rb')
-require File.expand_path(File.dirname(__FILE__) + '/TweetWord.rb')
+
+require File.expand_path(File.dirname(__FILE__) + '/Tweet.rb')
+
+require File.expand_path(File.dirname(__FILE__) + '/SendReply.rb')
+require File.expand_path(File.dirname(__FILE__) + '/SendMentions.rb')
+require File.expand_path(File.dirname(__FILE__) + '/RegularTweet.rb')
+
+require File.expand_path(File.dirname(__FILE__) + '/CheckMentions.rb')
+require File.expand_path(File.dirname(__FILE__) + '/CheckKeyword.rb')
+require File.expand_path(File.dirname(__FILE__) + '/CheckTime.rb')
+
 
 # configに登録
 Twitter.configure do |config|
@@ -21,15 +32,21 @@ Twitter.configure do |config|
     config.oauth_token_secret = OAUTH_TOEKN_SECRET
 end
 
-# 呟く内容を格納
-tweet = TweetWord()
 
-begin
-    # 呟く
-    Twitter.update(tweet)
-rescue Timeout::Error, StandardError  # 何らかのエラーがあった場合
-    puts "投稿エラー"
-else
+if CheckMentions()
+    # mentionsがきていたらreplyを送る
+    #SendReply()
 end
+
+if CheckKeyword()
+    # keywordがあったらmentionsを送る
+    #SendMentions()
+end
+
+if CheckTime()
+    # 指定した時間であれば定期的なツイートをする
+    RegularTweet()
+end
+
 
 
