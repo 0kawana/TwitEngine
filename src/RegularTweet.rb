@@ -15,7 +15,8 @@ require File.expand_path(File.dirname(__FILE__) + '/define.rb')
 require File.expand_path(File.dirname(__FILE__) + '/Tweet.rb')
 
 def RegularTweet()
-    texts = File.read(DIR_DATA + "/test.csv").split("\n")
+    #texts = File.read(DIR_DATA + "/test.csv").split("\n")
+    texts = File.read(DIR_DATA + "/Regular.csv").split("\n")
     # ランダムな内容を返す
     texts.shuffle!
     text = texts[0]
