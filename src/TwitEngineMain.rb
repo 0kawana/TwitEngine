@@ -14,6 +14,7 @@ require File.expand_path(File.dirname(__FILE__) + '/../mygems/twitter-4.4.4/lib/
 require File.expand_path(File.dirname(__FILE__) + '/define.rb')
 
 require File.expand_path(File.dirname(__FILE__) + '/Tweet.rb')
+require File.expand_path(File.dirname(__FILE__) + '/GetOldtime.rb')
 
 require File.expand_path(File.dirname(__FILE__) + '/SendReply.rb')
 require File.expand_path(File.dirname(__FILE__) + '/SendMentions.rb')
@@ -33,19 +34,30 @@ Twitter.configure do |config|
 end
 
 
-if CheckMentions()
+# 前回実行時の時間の取得・生成
+old_time = GetOldtime()
+
+# 現在実行時の時間の書き込み
+new_time = Time.new
+File.open(DIR_LOG + "/Runtime.log", 'w') do |file|
+    # year,mon,day,hour,min,secの順で書き込み
+    file.print new_time.strftime("%Y,%m,%d,%H,%M,%S")
+end
+
+
+if CheckMentions(old_time, new_time)
     # mentionsがきていたらreplyを送る
-    #SendReply()
+    #SendReply(old_time, new_time)
 end
 
-if CheckKeyword()
+if CheckKeyword(old_time, new_time)
     # keywordがあったらmentionsを送る
-    #SendMentions()
+    SendMentions(old_time, new_time)
 end
 
-if CheckTime()
+if CheckTime(new_time)
     # 指定した時間であれば定期的なツイートをする
-    RegularTweet()
+    #RegularTweet(new_time)
 end
 
 

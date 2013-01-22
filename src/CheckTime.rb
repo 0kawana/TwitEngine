@@ -12,10 +12,9 @@
 # このファイル単体で動かすときにはrequireが必要
 #require File.expand_path(File.dirname(__FILE__) + '/define.rb')
 
-def CheckTime()
-    time = Time.new
-    hour = time.hour
-    min = time.min
+def CheckTime(new_time)
+    hour = new_time.hour
+    min = new_time.min
 
     if min == 0
         # ??時00分の場合のみtrue

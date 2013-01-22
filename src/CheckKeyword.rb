@@ -12,7 +12,7 @@
 # このファイル単体で動かすときにはrequireが必要
 #require File.expand_path(File.dirname(__FILE__) + '/define.rb')
 
-def CheckKeyword()
+def CheckKeyword(old_time, new_time)
     return true
 end
 
