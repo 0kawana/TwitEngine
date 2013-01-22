@@ -8,10 +8,10 @@
 # 2013/01/19
 #===========================================================
 
-def Tweet(tweet)
+def Tweet(tweet, options)
     begin
         # 呟く
-        Twitter.update(tweet)
+        Twitter.update(tweet, options)
     rescue Timeout::Error, StandardError  # 何らかのエラーがあった場合
         puts "投稿エラー"
     else
