@@ -15,4 +15,8 @@ OAUTH_TOEKN_SECRET = ""
 
 # ディレクトリパス
 DIR_DATA = File.expand_path(File.dirname(__FILE__) + '/../data/')
+DIR_LOG  = File.expand_path(File.dirname(__FILE__) + '/../log/')
+DIR_TMP  = File.expand_path(File.dirname(__FILE__) + '/../_tmp/')
+
+USER_NAME = "mary_bot_test"
 
