@@ -5,7 +5,7 @@
 # 他のユーザからmentionsがきているかチェック
 #-----------------------------------------------------------
 # Author : gembaf
-# 2013/01/19
+# 2013/01/26
 #===========================================================
 
 # TwitEngineMain.rbから呼び出す場合は必要ない
@@ -13,6 +13,7 @@
 #require File.expand_path(File.dirname(__FILE__) + '/define.rb')
 
 def CheckMentions(old_time, new_time)
+    # old_time以上、new_time未満でお願いします
     return true
 end
 
