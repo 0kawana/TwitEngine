@@ -5,7 +5,7 @@
 # 前回実行時の時間を取得・生成
 #-----------------------------------------------------------
 # Author : gembaf
-# 2013/01/22
+# 2013/01/23
 #===========================================================
 
 # TwitEngineMain.rbから呼び出す場合は必要ない
@@ -13,6 +13,9 @@
 require File.expand_path(File.dirname(__FILE__) + '/define.rb')
 
 def GetOldtime()
+    unless File.exists?(DIR_LOG + "/Runtime.log")
+        return Time.new
+    end
     log = File.read(DIR_LOG + "/Runtime.log")
     # 文字列からTimeオブジェクトを生成
     old_time = Time.gm *log.split(",")
