@@ -4,8 +4,8 @@
 # CheckKeyword.rb
 # TLに反応するようなキーワードが呟かれているかをチェック
 #-----------------------------------------------------------
-# Author : gembaf
-# 2013/01/26
+# Author : AliceRaker
+# 2013/02/02
 #===========================================================
 
 # TwitEngineMain.rbから呼び出す場合は必要ない
@@ -20,6 +20,8 @@
 def CheckKeyword(old_time, new_time)
     # old_time以上、new_time未満のtimelineにkeywordにかかるものがあるかどうか判定
 
+=begin
+    #keywordが含まれるかどうかチェック
     keywords=[]
     data=[]
     Dir::glob("../data/keyword/*.csv").each{|filename|
@@ -27,20 +29,14 @@ def CheckKeyword(old_time, new_time)
     		keywords.unshift(data)
 		end
 }
-
+=end
     Twitter.home_timeline.each do |tweet|
         # 前回実行時から今回実行時までの間
         if old_time < tweet.created_at && tweet.created_at <= new_time
-            # 自分以外のツイートとリプライを除いたもののみ
+            # mentionと自分のツイート以外に存在するときtrueを返す
             if tweet.user.screen_name != USER_NAME &&
                !tweet.text.include?("@"+USER_NAME) then
-            	keywords.each do |pattern|
-            		#print(pattern) #debag
-     		   		if (tweet.text).include?(pattern)
     					return true
-    					break
-            		end
-            	end
             end
         # 時間外ならループを抜ける
         else
