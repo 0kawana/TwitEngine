@@ -93,12 +93,21 @@ end
 class ReplyResponder < Responder
     # responseメソッドをオーバーライド
     def response(tweet, mood)
+        # メアリの顕現
+        mary = Character.new(NAME)
+        #よく分からなかったのでここの部分修正頼みます
+
+    if(mary.check_keyword(tweet.text))
+    keycheck = mary.check_keyword(tweet.text)
+    return keycheck
+    else
         @dictionary.random.each do |line|
             resp = "@#{tweet.user.screen_name} " + line
             if check?(resp)
                 return resp
             end
         end
+    end
         return nil
     end
 
