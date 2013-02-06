@@ -68,7 +68,6 @@ class Character
         return resp
     end
 
-<<<<<<< HEAD
 
     #現在のpattern.txtを使う場合のキーワードチェックとそれに対するreplyの取得
     def check_keyword(tweet)
@@ -86,8 +85,6 @@ class Character
     end
         
 
-=======
->>>>>>> d8e430d7ceeba664868beafff0338a6c268db082
 =begin
     #MySQLの宣言
     mysql = Mysql.new()
