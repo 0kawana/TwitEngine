@@ -9,17 +9,27 @@
 # 2013/02/05
 #===========================================================
 
+require 'mysql'
+
 class Dictionary
     # 初期化
-    def initialize
-        @random = []
-        File.open(DIR_DATA + "/random.txt", 'r') do |f|
-            f.each do |line|
-                line.chomp!
-                next if line.empty?
-                @random.push(line)
+    def initialize(new_time)
+        # DBからの読み込み
+        mysql = Mysql.new('127.0.0.1', 'gembaf', 'hoge', 'mary_db')
+
+        # ランダム辞書は生まれ変わりました
+        # テスト用としてランダム辞書としているが、本来は返信辞書の役割
+        @random = {}
+        res = mysql.query("SELECT type, phrase FROM random")
+        res.each do |type, phrase|
+            if @random.has_key?(type)     # typeがすでに存在している場合
+                @random[type].add_phrase(phrase)
+            else        # 存在していない場合はPatternItemオブジェクトを生成
+                # layerとpointの部分にはダミーとしてnil
+                @random[type] = PatternItem.new(phrase, nil, nil)
             end
         end
+        # puts @random    #デバッグ用
 
         @regular = []
         File.open(DIR_DATA + "/Regular.csv", 'r') do |f|
@@ -30,20 +40,19 @@ class Dictionary
             end
         end
 
-        # !現在は使っていない
-        @pattern = []
-        File.open(DIR_DATA + "/pattern.txt", 'r') do |f|
-            f.each do |line|
-                pattern, phrases = line.chomp.split(",")
-                next if pattern.nil? or phrases.nil?
-                @pattern.push(PatternItem.new(pattern, phrases))
+        # こいつも生まれ変わりました
+        @pattern = {}
+        res = mysql.query("SELECT type, phrase, layer, point FROM pattern")
+        res.each do |type, phrase, layer, point|
+            if @pattern.has_key?(type)     # typeがすでに存在している場合
+                @pattern[type].add_phrase(phrase)
+            else        # 存在していない場合はPatternItemオブジェクトを生成
+                @pattern[type] = PatternItem.new(phrase, layer.to_i, point.to_i)
             end
         end
 
         # シャッフル
-        @random.shuffle!
         @regular.shuffle!
-        @pattern.shuffle!
     end
 
     # !現在は使っていない
@@ -66,47 +75,22 @@ class Dictionary
 end
 
 
-# !現在は使っていない
-# 参考にした本では、テキストから全てを読み込んでいたので複雑になっている
-# DBを使うのならばおそらくほとんど必要ない
+# 使い始めた
 class PatternItem
-    SEPARATOR = /^((-?\d+)##)?(.*)$/
-
-    def initialize(pattern, phrases)
-        SEPARATOR =~ pattern
-        @modify, @pattern = $2.to_i, $3
-
-        @phrases = []
-        phrases.split("|").each do |phrase|
-            SEPARATOR =~ phrase
-            @phrases.push({"need"=>$2.to_i, "phrase"=>$3})
-        end
+    # 初期化
+    def initialize(phrase, layer, point)
+        @phrases = [phrase]
+        @layer = layer
+        @point = point
     end
 
-    def match(str)
-        return str.match(@pattern)
+    # phrasesに追加
+    def add_phrase(phrase)
+        @phrases.push(phrase)
     end
 
-    def choice(mood)
-        choices = []
-        @phrases.each do |p|
-            if suitable?(p["need"], mood)
-                choices.push(p["phrase"])
-            end
-        end
-        return (choices.empty?) ? nil : select_random(choices)
-    end
-
-    def suitable?(need, mood)
-        return true if need == 0
-        if need > 0
-            return mood > need
-        else
-            return mood < need
-        end
-    end
-
-    attr_reader :modify, :pattern, :phrases
+    # アクセサの追加
+    attr_reader :phrases, :layer, :point
 end
 
 

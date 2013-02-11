@@ -1,4 +1,4 @@
-#!/usr/local/bin/ruby
+#!/usr/bin/ruby
 # encoding : utf-8
 
 #===========================================================
@@ -10,7 +10,8 @@
 #===========================================================
 
 # 絶対パスでrequire
-require File.expand_path(File.dirname(__FILE__) + '/../mygems/twitter-4.4.4/lib/twitter')
+#require File.expand_path(File.dirname(__FILE__) + '/../mygems/twitter-4.4.4/lib/twitter')
+require 'twitter'
 require File.expand_path(File.dirname(__FILE__) + '/define')
 require File.expand_path(File.dirname(__FILE__) + '/GetOldtime')
 
@@ -37,7 +38,7 @@ end
 
 
 # メアリの顕現
-mary = Character.new(NAME)
+mary = Character.new(NAME, new_time)
 
 timeline = []
 Twitter.home_timeline.each do |tweet|
@@ -47,16 +48,16 @@ Twitter.home_timeline.each do |tweet|
         unless tweet.user.screen_name == NAME
             timeline.unshift(tweet)
         end
-    # 時間外ならループを抜ける
+        # 時間外ならループを抜ける
     else
         break
     end
 end
 
 # 応答内容とoptionsを決定
-post = mary.dialogue(timeline, new_time) #=> Hashの配列
+post = mary.dialogue(timeline) #=> Hashの配列
 
-#puts post # デバッグ
+puts post # デバッグ
 
 post.each do |p|
     begin

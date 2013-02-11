@@ -14,10 +14,11 @@ require './classDictionary'
 
 class Character
     # 初期化
-    def initialize(name)
+    def initialize(name, new_time)
         @name = name
+        @new_time = new_time
 
-        @dictionary = Dictionary.new
+        @dictionary = Dictionary.new(@new_time)
         @emotion = Emotion.new(@dictionary)
 
         #@resp_what = WhatResponder.new("What", @dictionary)
@@ -29,22 +30,24 @@ class Character
     end
 
     # 呟く内容の配列を返す
-    def dialogue(timeline, new_time)
+    def dialogue(timeline)
         #@emotion.update(input)
         resp = []
         timeline.each do |tweet|
-            if tweet.text.include?("@#{NAME}")
+            @responder = nil        # 初期値はnil
+            if tweet.text.include?("@#{NAME}")    # replyの場合
+                # replyの場合は応答できるものがなくても構わないのでcheck_keywordはif文の中へ
+                key = check_keyword(tweet, [1, 2])
                 @responder = @resp_reply
-            else
-                # なにもなかった場合は飛ばす
-                next
+            elsif key = check_keyword(tweet, [0, 2])   # mentionの場合
+                @responder = @resp_mention
             end
 
-            #layer処理をここに挿入
-            #layer(tweet.text)
+            # 上記のどれにも引っかからなかった場合はとばす
+            next if @responder.nil?
 
             # 選択したResponderからresとoptionsを受け取る
-            res = @responder.response(tweet, @emotion.mood)
+            res = @responder.response(tweet, key, @emotion.mood)
             options = @responder.set_options(tweet)
             # resがnilだった場合は飛ばす
             next if res.nil?
@@ -55,9 +58,9 @@ class Character
         end
 
         # RegularResponderだけは時間をキーとしていれるので別処理
-        if new_time.min == 0
-            # テキストは関係ないのでダミーとしてnilを渡す
-            res = @resp_regular.response(nil, @emotion.mood)
+        if @new_time.min == 0
+            # 引数は関係ないのでnilを渡す
+            res = @resp_regular.response(nil, nil)
             options = @resp_regular.set_options(nil)
             # resがnilだった場合は飛ばす
             unless res.nil?
@@ -65,10 +68,29 @@ class Character
                 resp.push("response" => res, "options" => options)
             end
         end
+
         return resp
     end
 
 
+    # 指定されたlayerのなかからキーワードを探してkeyを返す
+    def check_keyword(tweet, layers)
+        # ハッシュを走査
+        @dictionary.pattern.each_pair do |key, ptn_item|
+            # 指定されていないlayerの場合はとばす
+            next unless layers.include?(ptn_item.layer)
+            ptn_item.phrases.each do |phrase|
+                # マッチしていたらkeyを返す
+                if tweet.text.include?(phrase)
+                    return key
+                end
+            end
+        end
+        return nil
+    end
+
+
+=begin
     #現在のpattern.txtを使う場合のキーワードチェックとそれに対するreplyの取得
     def check_keyword(tweet)
         @dictionary.pattern.each do |line|
@@ -83,8 +105,9 @@ class Character
         end
     return nil
     end
-        
+=end
 
+# MySQL関連の処理はDictionaryクラスへ移りました
 =begin
     #MySQLの宣言
     mysql = Mysql.new()
@@ -105,7 +128,7 @@ class Character
     def check_keyword(tweet,layer)
         #tweetにphraseが含まれる要素があればひとつ返す(現在はDB登録順で一番早いもの)
         check = mysql.query("SELECT * FROM keywords where LOCATE(phrase,".tweet.") > 0 and layer = ".layer." limit 1")
-        
+
         #checkがnullでないとき、typeの値を返す
         if(!check){return check[1]}
     end

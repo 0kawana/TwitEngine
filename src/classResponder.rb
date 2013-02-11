@@ -3,13 +3,12 @@
 #===========================================================
 # classResponder.rb
 # Responderクラス
-#  |--WhatResponderクラス
 #  |--ReplyResponderクラス
 #  |--RegularResponderクラス
-#  |--PatternResponderクラス
+#  |--MentionResponderクラス
 #-----------------------------------------------------------
 # Author : gembaf
-# 2013/02/05
+# 2013/02/11
 #===========================================================
 
 class Responder
@@ -26,7 +25,7 @@ class Responder
     end
 
     # 文字列を返す
-    def response(tweet, mood)
+    def response(tweet, key, mood)
         return ""
     end
 
@@ -70,7 +69,7 @@ end
 
 # !現在は使っていない
 class WhatResponder < Responder
-    def response(tweet, mood)
+    def response(tweet, key, mood)
         return "#{tweet.text}ってなに？"
     end
 end
@@ -78,8 +77,8 @@ end
 # 定期ポスト用
 class RegularResponder < Responder
     # responseメソッドをオーバーライド
-    # tweetは使っていない
-    def response(tweet, mood)
+    # 引数は使っていない
+    def response(tweet, key, mood)
         @dictionary.regular.each do |line|
             if check?(line)
                 return line
@@ -92,7 +91,10 @@ end
 # reply用
 class ReplyResponder < Responder
     # responseメソッドをオーバーライド
-    def response(tweet, mood)
+    def response(tweet, key, mood)
+        # ここでやりたかったっぽいことは下の方でやってます
+
+=begin
         # メアリの顕現
         mary = Character.new(NAME)
         #よく分からなかったのでここの部分修正頼みます
@@ -109,6 +111,31 @@ class ReplyResponder < Responder
         end
     end
         return nil
+=end
+
+        begin
+            # keyがnilだった場合はエラーがでるので例外処理で回避
+            # パターン側と同じキーの中からランダムにphraseを取り出す
+            @dictionary.random[key].phrases.shuffle.each do |phrase|
+                resp = "@#{tweet.user.screen_name} " + phrase
+                # チェックに引っかからなかったらreturn
+                if check?(resp)
+                    return resp
+                end
+            end
+        rescue
+        else
+            # keyがnilだったり、どの応答もできないときは例外的な応答
+            @dictionary.random["unknown"].phrases.shuffle.each do |phrase|
+                resp = "@#{tweet.user.screen_name} " + phrase
+                # チェックに引っかからなかったらreturn
+                if check?(resp)
+                    return resp
+                end
+            end
+        end
+        # それでも何も応答できない場合はnilを返す
+        return nil
     end
 
     # set_optionsメソッドをオーバーライド
@@ -116,21 +143,28 @@ class ReplyResponder < Responder
         options = {"in_reply_to_status_id" => tweet.id}
         return options
     end
-
 end
 
-# !現在は使っていない
-class PatternResponder < Responder
-    def response(tweet, mood)
-        @dictionary.pattern.each do |ptn_item|
-            if m = ptn_item.match(tweet.text)
-                resp = ptn_item.choice(mood)
-                next if resp.nil?
-                return resp.gsub(/%match%/, m.to_s)
+# mention用
+class MentionResponder < Responder
+    # responseメソッドをオーバーライド
+    def response(tweet, key, mood)
+        # パターン側と同じキーの中からランダムにphraseを取り出す
+        @dictionary.random[key].phrases.shuffle.each do |phrase|
+            resp = "@#{tweet.user.screen_name} " + phrase
+            # チェックに引っかからなかったらreturn
+            if check?(resp)
+                return resp
             end
         end
-        return select_random(@dictionary.regular)
+
+        # ツイートできるものがなければnilを返す
+        return nil
+    end
+
+    # set_optionsメソッドをオーバーライド
+    def set_options(tweet)
+        options = {"in_reply_to_status_id" => tweet.id}
+        return options
     end
 end
-
-
