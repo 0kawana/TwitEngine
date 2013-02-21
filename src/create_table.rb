@@ -7,66 +7,106 @@
 #
 # テーブルを完全に作り替えているので、使うときは要注意!!!!
 
-require 'mysql'
+require 'pg'
 
-mysql = Mysql.new('127.0.0.1', 'gembaf', 'hoge', 'mary_db')
+conn = PGconn.connect('localhost', 5432, '', '', 'mary_db', 'gembaf', 'hoge')
 
-# ランダム辞書
+# 応答用辞書
 begin
-    mysql.query("DROP TABLE random")
-    puts "drop table random"
+    conn.exec("DROP TABLE response")
+    puts "drop table response"
 rescue
-    puts "table random is not exist"
-else
+    puts "table response does not exist"
+ensure
     puts "create table"
 end
 
-# 今後、時間帯フラグと必要機嫌値を追加予定
-sql = <<SQL
-CREATE TABLE random (
-    no int NOT NULL PRIMARY KEY,
+query = <<SQL
+CREATE TABLE response (
+    no int PRIMARY KEY,
     type text,
-    phrase text
+    phrase text,
+    mood int,
+    act_time00_03 boolean,
+    act_time03_06 boolean,
+    act_time06_09 boolean,
+    act_time09_12 boolean,
+    act_time12_15 boolean,
+    act_time15_18 boolean,
+    act_time18_21 boolean,
+    act_time21_24 boolean,
+    exist boolean
 )
 SQL
-mysql.query(sql)
+conn.exec(query)
 
-sql = <<SQL
-LOAD DATA INFILE '/home/gembaf/TwitEngine/data/random.csv'
-INTO TABLE random
-FIELDS TERMINATED BY ','
-LINES TERMINATED BY '\n'
-SQL
-mysql.query(sql)
-
+conn.exec("COPY response FROM '/home/gembaf/TwitEngine/data/response.csv' WITH CSV")
 
 # パターン辞書
 begin
-    mysql.query("DROP TABLE pattern")
+    conn.exec("DROP TABLE pattern")
     puts "drop table pattern"
 rescue
-    puts "table pattern is not exist"
-else
+    puts "table pattern does not exist"
+ensure
     puts "create table"
 end
 
-sql = <<SQL
+query = <<SQL
 CREATE TABLE pattern (
-    no int NOT NULL PRIMARY KEY,
+    no int PRIMARY KEY,
     type text,
     phrase text,
     layer int,
-    point int
+    mood int,
+    exist boolean
 )
 SQL
-mysql.query(sql)
+conn.exec(query)
 
-sql = <<SQL
-LOAD DATA INFILE '/home/gembaf/TwitEngine/data/pattern.csv'
-INTO TABLE pattern
-FIELDS TERMINATED BY ','
-LINES TERMINATED BY '\n'
+conn.exec("COPY pattern FROM '/home/gembaf/TwitEngine/data/pattern.csv' WITH CSV")
+
+# 定期用辞書
+begin
+    conn.exec("DROP TABLE regular")
+    puts "drop table regular"
+rescue
+    puts "table regular does not exist"
+ensure
+    puts "create table"
+end
+
+query = <<SQL
+CREATE TABLE regular (
+    no int PRIMARY KEY,
+    phrase text,
+    hour int,
+    exist boolean
+)
 SQL
-mysql.query(sql)
+conn.exec(query)
+
+conn.exec("COPY regular FROM '/home/gembaf/TwitEngine/data/regular.csv' WITH CSV")
+
+# ユーザデータ
+begin
+    conn.exec("DROP TABLE userdata")
+    puts "drop table userdata"
+rescue
+    puts "table userdata does not exist"
+ensure
+    puts "create table"
+end
+
+query = <<SQL
+CREATE TABLE userdata (
+    user_key int PRIMARY KEY,
+    user_name text,
+    user_mood int,
+    user_point int,
+    exist boolean
+)
+SQL
+conn.exec(query)
 
 

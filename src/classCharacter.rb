@@ -6,7 +6,7 @@
 # Emotionクラス
 #-----------------------------------------------------------
 # Author : gembaf
-# 2013/02/05
+# 2013/02/17
 #===========================================================
 
 require './classResponder'
@@ -21,25 +21,27 @@ class Character
         @dictionary = Dictionary.new(@new_time)
         @emotion = Emotion.new(@dictionary)
 
-        #@resp_what = WhatResponder.new("What", @dictionary)
         @resp_reply = ReplyResponder.new("Reply", @dictionary)
         @resp_regular = RegularResponder.new("Regular", @dictionary)
-        #@resp_pattern = PatternResponder.new("Pattern", @dictionary)
-
-        @responder = @resp_reply
+        @resp_mention = MentionResponder.new("Mention", @dictionary)
     end
 
     # 呟く内容の配列を返す
     def dialogue(timeline)
-        #@emotion.update(input)
+        # layerの定数
+        mention_only = 0
+        reply_only = 1
+        mention_and_reply = 2
+
         resp = []
         timeline.each do |tweet|
             @responder = nil        # 初期値はnil
+            # @responderとkeyの決定
             if tweet.text.include?("@#{NAME}")    # replyの場合
                 # replyの場合は応答できるものがなくても構わないのでcheck_keywordはif文の中へ
-                key = check_keyword(tweet, [1, 2])
+                key = check_keyword(tweet, [reply_only, mention_and_reply])
                 @responder = @resp_reply
-            elsif key = check_keyword(tweet, [0, 2])   # mentionの場合
+            elsif key = check_keyword(tweet, [mention_only, mention_and_reply])   # mentionの場合
                 @responder = @resp_mention
             end
 
@@ -51,23 +53,32 @@ class Character
             options = @responder.set_options(tweet)
             # resがnilだった場合は飛ばす
             next if res.nil?
-            # Responderクラスのクラス変数であるnearly_tweetの更新
-            @responder.set_nearly_tweet(res)
+            # nearly_tweetの更新
+            @dictionary.set_nearly_tweet(res)
             # ハッシュとして追加
             resp.push("response" => res, "options" => options)
+
+            # 機嫌値の変動
+            unless key.nil?
+                @emotion.update(tweet.user.id.to_s, @dictionary.pattern[key].mood)
+            end
         end
 
         # RegularResponderだけは時間をキーとしていれるので別処理
         if @new_time.min == 0
             # 引数は関係ないのでnilを渡す
-            res = @resp_regular.response(nil, nil)
-            options = @resp_regular.set_options(nil)
+            res = @resp_regular.response(nil, nil, nil)
             # resがnilだった場合は飛ばす
             unless res.nil?
                 # ハッシュとして追加
-                resp.push("response" => res, "options" => options)
+                resp.push("response" => res, "options" => {})
             end
+            # 機嫌値のリカバリー
+            @emotion.adjust_mood
         end
+
+        # 最後に全ユーザ情報を更新
+        @dictionary.update_userdata
 
         return resp
     end
@@ -81,64 +92,30 @@ class Character
             next unless layers.include?(ptn_item.layer)
             ptn_item.phrases.each do |phrase|
                 # マッチしていたらkeyを返す
-                if tweet.text.include?(phrase)
-                    return key
-                end
+                return key if tweet.text.include?(phrase)
             end
         end
         return nil
     end
 
-
-=begin
-    #現在のpattern.txtを使う場合のキーワードチェックとそれに対するreplyの取得
-    def check_keyword(tweet)
-        @dictionary.pattern.each do |line|
-            keywords = line.pattern.split("|")
-            #パターンにあうか調べる
-            keywords.each do |p|
-                #パターンにあう場合はフレーズを返す
-                if tweet.include?(p)
-                    return line.phrase[0]
-                end
-            end
+    # フォローフォロワーの整理
+    def adjust_user
+        followers = Twitter.follower_ids(NAME).ids  #=> フォロワー
+        friends = Twitter.friend_ids(NAME).ids      #=> フォロー
+        removes = friends - followers      #=> リムーブ対象
+        registers = followers - friends    #=> フォロー対象
+        # DBからユーザを削除
+        @dictionary.remove_user(removes)
+        # DBに新しいユーザを追加
+        @dictionary.register_user(registers)
+        # 一方的にフォローしているユーザはリムーブ
+        removes.each do |user|
+            Twitter.unfollow(user)
         end
-    return nil
-    end
-=end
-
-# MySQL関連の処理はDictionaryクラスへ移りました
-=begin
-    #MySQLの宣言
-    mysql = Mysql.new()
-
-    #layer処理
-    def layer(tweet)
-    if(type = check_keyword(tweet,1)){
-        #挨拶処理
-        #type に oha とか oya とか種類を返してくるので、それにあったリプライ内容を取得する@ResponderサブクラスかReplyResponderの拡張が必要
-    }
-    if(type = check_keyword(tweet,0)){
-        #好感度処理
-        #高感度の仕様が固まってないから何とも typeに文字列で-10とか返させて、それを数値に変換した後そのまま高感度の加減処理すればいいかなあ
-    }
-    end
-
-    #キーワードチェック
-    def check_keyword(tweet,layer)
-        #tweetにphraseが含まれる要素があればひとつ返す(現在はDB登録順で一番早いもの)
-        check = mysql.query("SELECT * FROM keywords where LOCATE(phrase,".tweet.") > 0 and layer = ".layer." limit 1")
-
-        #checkがnullでないとき、typeの値を返す
-        if(!check){return check[1]}
-    end
-
-=end
-
-    # !現在は使っていない
-    # 学習した内容を辞書に追加
-    def save
-        @dictionary.save
+        # 一方的にフォローされているユーザはフォロー
+        registers.each do |user|
+            Twitter.follow(user)
+        end
     end
 
     # Responderクラスのインスタンス変数へのアクセサ
@@ -146,61 +123,47 @@ class Character
         return @responder.name
     end
 
-    def mood
-        return @emotion.mood
-    end
-
     # アクセサを追加
     attr_reader :name
 end
 
-
-# !現在は使っていない
-# Characterクラスと一緒に使う
+#=================================================
+# Emotionクラス
+#=================================================
 class Emotion
-    MOOD_MIN = -15
-    MOOD_MAX = 15
-    MOOD_RECOVERY = 0.5
+    MOOD_MIN = -30
+    MOOD_MAX = 30
+    MOOD_RECOVERY = 1
 
     # 初期化
     def initialize(dictionary)
         @dictionary = dictionary
-        @mood = 0
     end
 
     # 機嫌値を変動
-    def update(input)
-        @dictionary.pattern.each do |ptn_item|
-            if ptn_item.match(input)
-                adjust_mood(ptn_item.modify)
-                break
-            end
+    def update(user_key, val)
+        mood = @dictionary.userdata[user_key].user_mood + val
+        if mood > MOOD_MAX
+            mood = MOOD_MAX
+        elsif mood < MOOD_MIN
+            mood = MOOD_MIN
         end
-        if @mood < 0
-            @mood += MOOD_RECOVERY
-        elsif @mood > 0
-            @mood -= MOOD_RECOVERY
-        end
+        @dictionary.update_mood(user_key, mood)
     end
 
-    # MAXやMINを超えた場合
-    def adjust_mood(val)
-        @mood += val
-        if @mood > MOOD_MAX
-            @mood = MOOD_MAX
-        elsif @mood < MOOD_MIN
-            @mood = MOOD_MIN
+    # 全ユーザの機嫌値を0に近づける
+    def adjust_mood
+        @dictionary.userdata.each_pair do |key, value|
+            if value.user_mood > 0
+                @dictionary.update_mood(key, value.user_mood - MOOD_RECOVERY)
+            elsif value.user_mood < 0
+                @dictionary.update_mood(key, value.user_mood + MOOD_RECOVERY)
+            end
         end
     end
 
     # アクセサを追加
     attr_reader :mood
-end
-
-
-# !現在は使っていない
-def select_random(arr)
-    return arr[rand(arr.size)]
 end
 
 

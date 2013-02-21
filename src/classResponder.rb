@@ -8,16 +8,10 @@
 #  |--MentionResponderクラス
 #-----------------------------------------------------------
 # Author : gembaf
-# 2013/02/11
+# 2013/02/17
 #===========================================================
 
 class Responder
-    # 自分自身の直近15postを取得
-    @@nearly_tweet = []
-    Twitter.user_timeline(NAME, "count"=>15).each do |tweet|
-        @@nearly_tweet.push(tweet.text)
-    end
-
     # 初期化
     def initialize(name, dictionary)
         @name = name
@@ -34,29 +28,20 @@ class Responder
         return {}
     end
 
-    # @@nearly_tweetを更新
-    def set_nearly_tweet(text)
-        # 一番古いものを消去
-        @@nearly_tweet.pop
-        # 先頭に一番新しいものを追加
-        @@nearly_tweet.unshift(text)
-    end
-
     # ツイートする際にエラーが出ないようにチェック
     def check?(resp)
         # 140字以内かどうか
-        if resp.length > 140
-            return false
-        end
-
+        return false if resp.length > 140
         # 直近15postとかぶっていないか
-        @@nearly_tweet.each do |line|
-            if line == resp
-                return false
-            end
-        end
+        return false if @dictionary.nearly_tweet.include?(resp)
+        # 機嫌値を満たしているか
 
         return true
+    end
+
+    # phraseの改行とユーザ名を置換
+    def correct_phrase(name, phrase)
+        return phrase.gsub("<BR>", "\n").gsub("%match%", name)
     end
 
     # アクセサを追加
@@ -67,22 +52,13 @@ end
 # Responderクラスのサブクラス
 #=================================================
 
-# !現在は使っていない
-class WhatResponder < Responder
-    def response(tweet, key, mood)
-        return "#{tweet.text}ってなに？"
-    end
-end
-
 # 定期ポスト用
 class RegularResponder < Responder
     # responseメソッドをオーバーライド
-    # 引数は使っていない
-    def response(tweet, key, mood)
-        @dictionary.regular.each do |line|
-            if check?(line)
-                return line
-            end
+    def response(tweet, key, mood)   #=> 引数は使っていない
+        # regular辞書からつぶやく
+        @dictionary.regular.shuffle.each do |line|
+            return line if check?(line)
         end
         return nil
     end
@@ -92,47 +68,30 @@ end
 class ReplyResponder < Responder
     # responseメソッドをオーバーライド
     def response(tweet, key, mood)
-        # ここでやりたかったっぽいことは下の方でやってます
-
-=begin
-        # メアリの顕現
-        mary = Character.new(NAME)
-        #よく分からなかったのでここの部分修正頼みます
-
-    if(mary.check_keyword(tweet.text))
-    keycheck = mary.check_keyword(tweet.text)
-    return keycheck
-    else
-        @dictionary.random.each do |line|
-            resp = "@#{tweet.user.screen_name} " + line
-            if check?(resp)
-                return resp
+        # keyがnilだった場合はunknownにしておく
+        key = "unknown" if key.nil?
+        # ユーザの機嫌値
+        user_mood = @dictionary.userdata[tweet.user.id.to_s].user_mood
+        # パターン側と同じキーの中からランダムにphraseとmoodを取り出す
+        @dictionary.response[key].phrases.zip(@dictionary.response[key].mood).shuffle.each do |phrase, mood|
+            if user_mood == 0
+                next unless mood == 0
+            elsif user_mood > 0
+                # 0 < mood <= user_mood以外の範囲であればとばす
+                next unless 0 < mood and mood <= user_mood
+            else
+                # user_mood <= mood < 0以外の範囲であればとばす
+                next unless user_mood <= mood and mood < 0
             end
+            resp = "@#{tweet.user.screen_name} " + correct_phrase(tweet.user.name, phrase)
+            # チェックに引っかからなかったらreturn
+            return resp if check?(resp)
         end
-    end
-        return nil
-=end
-
-        begin
-            # keyがnilだった場合はエラーがでるので例外処理で回避
-            # パターン側と同じキーの中からランダムにphraseを取り出す
-            @dictionary.random[key].phrases.shuffle.each do |phrase|
-                resp = "@#{tweet.user.screen_name} " + phrase
-                # チェックに引っかからなかったらreturn
-                if check?(resp)
-                    return resp
-                end
-            end
-        rescue
-        else
-            # keyがnilだったり、どの応答もできないときは例外的な応答
-            @dictionary.random["unknown"].phrases.shuffle.each do |phrase|
-                resp = "@#{tweet.user.screen_name} " + phrase
-                # チェックに引っかからなかったらreturn
-                if check?(resp)
-                    return resp
-                end
-            end
+        # keyがnilだったり、どの応答もできないときは例外的な応答
+        @dictionary.response["unknown"].phrases.shuffle.each do |phrase|
+            resp = "@#{tweet.user.screen_name} " + correct_phrase(tweet.user.name, phrase)
+            # チェックに引っかからなかったらreturn
+            return resp if check?(resp)
         end
         # それでも何も応答できない場合はnilを返す
         return nil
@@ -149,13 +108,23 @@ end
 class MentionResponder < Responder
     # responseメソッドをオーバーライド
     def response(tweet, key, mood)
+        # 今回のresponse辞書にkeyがなかった場合はnilを返す
+        return nil unless @dictionary.response.has_key?(key)
+
         # パターン側と同じキーの中からランダムにphraseを取り出す
-        @dictionary.random[key].phrases.shuffle.each do |phrase|
-            resp = "@#{tweet.user.screen_name} " + phrase
-            # チェックに引っかからなかったらreturn
-            if check?(resp)
-                return resp
+        @dictionary.response[key].phrases.zip(@dictionary.response[key].mood).shuffle.each do |phrase, mood|
+            if user_mood == 0
+                next unless mood == 0
+            elsif user_mood > 0
+                # 0 < mood <= user_mood以外の範囲であればとばす
+                next unless 0 < mood and mood <= user_mood
+            else
+                # user_mood <= mood < 0以外の範囲であればとばす
+                next unless user_mood <= mood and mood < 0
             end
+            resp = "@#{tweet.user.screen_name} " + correct_phrase(tweet.user.name, phrase)
+            # チェックに引っかからなかったらreturn
+            return resp if check?(resp)
         end
 
         # ツイートできるものがなければnilを返す
@@ -168,3 +137,5 @@ class MentionResponder < Responder
         return options
     end
 end
+
+
