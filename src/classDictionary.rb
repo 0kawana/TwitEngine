@@ -9,7 +9,7 @@
 # UserItemクラス
 #-----------------------------------------------------------
 # Author : gembaf
-# 2013/02/17
+# 2013/02/21
 #===========================================================
 
 require 'pg'
@@ -18,7 +18,7 @@ class Dictionary
     # 初期化
     def initialize(new_time)
         # DBからの読み込み
-        @conn = PGconn.connect('localhost', 5432, '', '', 'mary_db', 'gembaf', 'hoge')
+        @conn = PGconn.connect(ENV['HOST'], 5432, '', '', ENV['DB_NAME'], ENV['USER_NAME'], ENV['PASSWORD'])
 
         # reply, mention用辞書
         @response = {}
@@ -56,11 +56,16 @@ class Dictionary
 
         # 定期post用辞書
         @regular = []
-        res = @conn.exec("SELECT phrase FROM regular WHERE exist='t'")
+        new_hour = new_time.hour
+        # 現在実行時の時間だけの特殊な定期ポストを取得
+        res = @conn.exec("SELECT phrase FROM regular WHERE hour=#{new_hour} AND exist='t'")
+        if res.to_a.empty?
+            # なければワイルドカードのものを取得
+            res = @conn.exec("SELECT phrase FROM regular WHERE hour=-1 AND exist='t'")
+        end
         res.each do |line|
             phrase = line["phrase"]
-            hour = line["hour"]
-            @regular.push("phrase"=>phrase, "hour"=>hour)
+            @regular.push(phrase)
         end
 
         # パターン照合用辞書
@@ -92,7 +97,8 @@ class Dictionary
         @nearly_tweet = []
         before = 24 * 60 * 60  #=> 24時間前
         Twitter.user_timeline(NAME, "count"=>15).each do |tweet|
-            if new_time-before < tweet.created_at and tweet.created_at <= new_time
+            created_at = tweet.created_at + 9*60*60
+            if new_time-before < created_at and created_at <= new_time
                 @nearly_tweet.push(tweet.text)
             else
                 break
@@ -124,7 +130,7 @@ class Dictionary
     def update_userdata
         @userdata.each_pair do |key, value|
             @conn.exec("UPDATE userdata
-                        SET user_mood='#{value.user_mood}'
+                        SET user_name='#{value.user_name}', user_mood='#{value.user_mood}'
                         WHERE user_key='#{key}' AND exist='t'")
         end
     end

@@ -6,11 +6,11 @@
 # Emotionクラス
 #-----------------------------------------------------------
 # Author : gembaf
-# 2013/02/17
+# 2013/02/21
 #===========================================================
 
-require './classResponder'
-require './classDictionary'
+require File.expand_path(File.dirname(__FILE__) + '/classResponder')
+require File.expand_path(File.dirname(__FILE__) + '/classDictionary')
 
 class Character
     # 初期化
@@ -38,6 +38,9 @@ class Character
             @responder = nil        # 初期値はnil
             # @responderとkeyの決定
             if tweet.text.include?("@#{NAME}")    # replyの場合
+                if tweet.text =~ /(はじ|初|始)めまして。(.*?)です。/
+                    @dictionary.update_name(tweet.user.id.to_s, $2)
+                end
                 # replyの場合は応答できるものがなくても構わないのでcheck_keywordはif文の中へ
                 key = check_keyword(tweet, [reply_only, mention_and_reply])
                 @responder = @resp_reply
@@ -49,7 +52,7 @@ class Character
             next if @responder.nil?
 
             # 選択したResponderからresとoptionsを受け取る
-            res = @responder.response(tweet, key, @emotion.mood)
+            res = @responder.response(tweet, key)
             options = @responder.set_options(tweet)
             # resがnilだった場合は飛ばす
             next if res.nil?

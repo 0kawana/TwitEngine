@@ -9,6 +9,8 @@
 
 require 'pg'
 
+dir = File.expand_path(File.dirname(__FILE__) + "/../data/")
+
 conn = PGconn.connect('localhost', 5432, '', '', 'mary_db', 'gembaf', 'hoge')
 
 # 応答用辞書
@@ -40,7 +42,7 @@ CREATE TABLE response (
 SQL
 conn.exec(query)
 
-conn.exec("COPY response FROM '/home/gembaf/TwitEngine/data/response.csv' WITH CSV")
+conn.exec("COPY response FROM '#{dir}/response.csv' WITH CSV")
 
 # パターン辞書
 begin
@@ -64,7 +66,7 @@ CREATE TABLE pattern (
 SQL
 conn.exec(query)
 
-conn.exec("COPY pattern FROM '/home/gembaf/TwitEngine/data/pattern.csv' WITH CSV")
+conn.exec("COPY pattern FROM '#{dir}/pattern.csv' WITH CSV")
 
 # 定期用辞書
 begin
@@ -86,27 +88,6 @@ CREATE TABLE regular (
 SQL
 conn.exec(query)
 
-conn.exec("COPY regular FROM '/home/gembaf/TwitEngine/data/regular.csv' WITH CSV")
-
-# ユーザデータ
-begin
-    conn.exec("DROP TABLE userdata")
-    puts "drop table userdata"
-rescue
-    puts "table userdata does not exist"
-ensure
-    puts "create table"
-end
-
-query = <<SQL
-CREATE TABLE userdata (
-    user_key int PRIMARY KEY,
-    user_name text,
-    user_mood int,
-    user_point int,
-    exist boolean
-)
-SQL
-conn.exec(query)
+conn.exec("COPY regular FROM '#{dir}/regular.csv' WITH CSV")
 
 

@@ -8,9 +8,10 @@
 #  |--MentionResponderクラス
 #-----------------------------------------------------------
 # Author : gembaf
-# 2013/02/17
+# 2013/02/21
 #===========================================================
 
+# 抽象クラス
 class Responder
     # 初期化
     def initialize(name, dictionary)
@@ -19,7 +20,7 @@ class Responder
     end
 
     # 文字列を返す
-    def response(tweet, key, mood)
+    def response(tweet, key)
         return ""
     end
 
@@ -55,7 +56,7 @@ end
 # 定期ポスト用
 class RegularResponder < Responder
     # responseメソッドをオーバーライド
-    def response(tweet, key, mood)   #=> 引数は使っていない
+    def response(tweet, key)   #=> 引数は使っていない
         # regular辞書からつぶやく
         @dictionary.regular.shuffle.each do |line|
             return line if check?(line)
@@ -67,18 +68,16 @@ end
 # reply用
 class ReplyResponder < Responder
     # responseメソッドをオーバーライド
-    def response(tweet, key, mood)
+    def response(tweet, key)
         # keyがnilだった場合はunknownにしておく
         key = "unknown" if key.nil?
         # ユーザの機嫌値
         user_mood = @dictionary.userdata[tweet.user.id.to_s].user_mood
         # パターン側と同じキーの中からランダムにphraseとmoodを取り出す
         @dictionary.response[key].phrases.zip(@dictionary.response[key].mood).shuffle.each do |phrase, mood|
-            if user_mood == 0
-                next unless mood == 0
-            elsif user_mood > 0
-                # 0 < mood <= user_mood以外の範囲であればとばす
-                next unless 0 < mood and mood <= user_mood
+            if user_mood >= 0
+                # 0 <= mood <= user_mood以外の範囲であればとばす
+                next unless 0 <= mood and mood <= user_mood
             else
                 # user_mood <= mood < 0以外の範囲であればとばす
                 next unless user_mood <= mood and mood < 0
@@ -107,17 +106,17 @@ end
 # mention用
 class MentionResponder < Responder
     # responseメソッドをオーバーライド
-    def response(tweet, key, mood)
+    def response(tweet, key)
         # 今回のresponse辞書にkeyがなかった場合はnilを返す
         return nil unless @dictionary.response.has_key?(key)
 
+        # ユーザの機嫌値
+        user_mood = @dictionary.userdata[tweet.user.id.to_s].user_mood
         # パターン側と同じキーの中からランダムにphraseを取り出す
         @dictionary.response[key].phrases.zip(@dictionary.response[key].mood).shuffle.each do |phrase, mood|
-            if user_mood == 0
-                next unless mood == 0
-            elsif user_mood > 0
+            if user_mood >= 0
                 # 0 < mood <= user_mood以外の範囲であればとばす
-                next unless 0 < mood and mood <= user_mood
+                next unless 0 <= mood and mood <= user_mood
             else
                 # user_mood <= mood < 0以外の範囲であればとばす
                 next unless user_mood <= mood and mood < 0
