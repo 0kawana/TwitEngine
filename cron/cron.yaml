@@ -1,5 +1,5 @@
 cron:
 - description: post_random
   url: /
-  schedule: every 2 minutes
+  schedule: every 1 minutes
   timezone: Asia/Tokyo
