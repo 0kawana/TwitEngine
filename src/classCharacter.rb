@@ -68,7 +68,8 @@ class Character
         end
 
         # RegularResponderだけは時間をキーとしていれるので別処理
-        if @new_time.min == 0
+        # if @new_time.min == 0
+        if @new_time.min == 0 or @new_time.min == 1 or @new_time == 2
             # 引数は関係ないのでnilを渡す
             res = @resp_regular.response(nil, nil)
             # resがnilだった場合は飛ばす
