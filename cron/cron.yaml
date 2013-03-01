@@ -1,0 +1,5 @@
+cron:
+- description: post_random
+  url: /
+  schedule: every 1 minutes
+  timezone: Asia/Tokyo

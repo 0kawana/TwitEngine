@@ -56,7 +56,7 @@ class Mary
         # 呟く
         tweet_post(post)
         # フォロー・フォロワーの整理
-        if @new_time.hour == 4 and @new_time.min == 0 # 一番人がいなさそうな午前４時で
+        if @new_time.hour == "04" and @new_time.min == "00" # 一番人がいなさそうな午前４時で
             @mary.adjust_user
         end
 
