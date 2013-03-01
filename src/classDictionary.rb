@@ -56,9 +56,8 @@ class Dictionary
 
         # 定期post用辞書
         @regular = []
-        new_hour = new_time.hour
         # 現在実行時の時間だけの特殊な定期ポストを取得
-        res = @conn.exec("SELECT phrase FROM regular WHERE hour=#{new_hour} AND exist='t'")
+        res = @conn.exec("SELECT phrase FROM regular WHERE hour=#{new_time.hour} AND exist='t'")
         if res.to_a.empty?
             # なければワイルドカードのものを取得
             res = @conn.exec("SELECT phrase FROM regular WHERE hour=-1 AND exist='t'")

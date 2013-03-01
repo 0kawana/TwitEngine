@@ -70,7 +70,7 @@ class Character
         # RegularResponderだけは時間をキーとしていれるので別処理
         if @new_time.min == 0
             # 引数は関係ないのでnilを渡す
-            res = @resp_regular.response(nil, nil, nil)
+            res = @resp_regular.response(nil, nil)
             # resがnilだった場合は飛ばす
             unless res.nil?
                 # ハッシュとして追加
