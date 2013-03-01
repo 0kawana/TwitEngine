@@ -8,7 +8,7 @@
 #  |--MentionResponderクラス
 #-----------------------------------------------------------
 # Author : gembaf
-# 2013/02/21
+# 2013/03/01
 #===========================================================
 
 # 抽象クラス
@@ -71,8 +71,9 @@ class ReplyResponder < Responder
     def response(tweet, key)
         # keyがnilだった場合はunknownにしておく
         key = "unknown" if key.nil?
-        # ユーザの機嫌値
+        # ユーザ情報
         user_mood = @dictionary.userdata[tweet.user.id.to_s].user_mood
+        user_name = @dictionary.userdata[tweet.user.id.to_s].user_name
         # パターン側と同じキーの中からランダムにphraseとmoodを取り出す
         @dictionary.response[key].phrases.zip(@dictionary.response[key].mood).shuffle.each do |phrase, mood|
             if user_mood >= 0
@@ -82,13 +83,13 @@ class ReplyResponder < Responder
                 # user_mood <= mood < 0以外の範囲であればとばす
                 next unless user_mood <= mood and mood < 0
             end
-            resp = "@#{tweet.user.screen_name} " + correct_phrase(tweet.user.name, phrase)
+            resp = "@#{tweet.user.screen_name} " + correct_phrase(user_name, phrase)
             # チェックに引っかからなかったらreturn
             return resp if check?(resp)
         end
         # keyがnilだったり、どの応答もできないときは例外的な応答
         @dictionary.response["unknown"].phrases.shuffle.each do |phrase|
-            resp = "@#{tweet.user.screen_name} " + correct_phrase(tweet.user.name, phrase)
+            resp = "@#{tweet.user.screen_name} " + correct_phrase(user_name, phrase)
             # チェックに引っかからなかったらreturn
             return resp if check?(resp)
         end
@@ -110,8 +111,9 @@ class MentionResponder < Responder
         # 今回のresponse辞書にkeyがなかった場合はnilを返す
         return nil unless @dictionary.response.has_key?(key)
 
-        # ユーザの機嫌値
+        # ユーザ情報
         user_mood = @dictionary.userdata[tweet.user.id.to_s].user_mood
+        user_name = @dictionary.userdata[tweet.user.id.to_s].user_name
         # パターン側と同じキーの中からランダムにphraseを取り出す
         @dictionary.response[key].phrases.zip(@dictionary.response[key].mood).shuffle.each do |phrase, mood|
             if user_mood >= 0
@@ -121,7 +123,7 @@ class MentionResponder < Responder
                 # user_mood <= mood < 0以外の範囲であればとばす
                 next unless user_mood <= mood and mood < 0
             end
-            resp = "@#{tweet.user.screen_name} " + correct_phrase(tweet.user.name, phrase)
+            resp = "@#{tweet.user.screen_name} " + correct_phrase(user_name, phrase)
             # チェックに引っかからなかったらreturn
             return resp if check?(resp)
         end
