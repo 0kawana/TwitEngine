@@ -93,8 +93,9 @@ class Dictionary
 
         # 自分自身の直近15postを24時間前までの間で取得
         # 24時間経てば同じpostができるので
+        # cronで実行する際に誤差が発生するので23に変更
         @nearly_tweet = []
-        before = 24 * 60 * 60  #=> 24時間前
+        before = 23 * 60 * 60  #=> 23時間前
         Twitter.user_timeline(NAME, "count"=>15).each do |tweet|
             created_at = tweet.created_at + 9*60*60
             if new_time-before < created_at and created_at <= new_time
