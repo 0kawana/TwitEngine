@@ -32,13 +32,24 @@ class Mary
         # メアリの顕現
         @mary = Character.new(NAME, @new_time)
 
+        # フォロワー同士のリプライには反応しないようにリプライとその他を別に取得
         @timeline = []
+        Twitter.mentions.each do |tweet|
+            # 前回実行時から今回実行時までの間
+            created_at = tweet.created_at + 9*60*60
+            if @old_time < created_at and created_at <= @new_time
+                @timeline.unshift(tweet)
+            else
+                # 時間外ならループを抜ける
+                break
+            end
+        end
         Twitter.home_timeline.each do |tweet|
             # 前回実行時から今回実行時までの間
             created_at = tweet.created_at + 9*60*60
             if @old_time < created_at and created_at <= @new_time
                 # 自分のツイート以外を先頭に格納
-                unless tweet.user.screen_name == NAME
+                unless tweet.user.screen_name == NAME or tweet.text.include("@")
                     @timeline.unshift(tweet)
                 end
             else
