@@ -49,7 +49,7 @@ class Mary
             created_at = tweet.created_at + 9*60*60
             if @old_time < created_at and created_at <= @new_time
                 # 自分のツイート以外を先頭に格納
-                unless tweet.user.screen_name == NAME or tweet.text.include("@")
+                unless tweet.user.screen_name == NAME or tweet.text.include?("@")
                     @timeline.unshift(tweet)
                 end
             else
