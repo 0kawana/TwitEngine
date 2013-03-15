@@ -44,7 +44,9 @@ class Character
                 # replyの場合は応答できるものがなくても構わないのでcheck_keywordはif文の中へ
                 key = check_keyword(tweet, [reply_only, mention_and_reply])
                 @responder = @resp_reply
-            elsif key = check_keyword(tweet, [mention_only, mention_and_reply])   # mentionの場合
+            elsif check_keyword(tweet, [mention_only, mention_and_reply])   # mentionの場合
+                # 制御構文のなかでの代入はRubyでは警告が出るらしいので
+                key = check_keyword(tweet, [mention_only, mention_and_reply])
                 @responder = @resp_mention
             end
 
