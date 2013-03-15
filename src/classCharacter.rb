@@ -44,9 +44,7 @@ class Character
                 # replyの場合は応答できるものがなくても構わないのでcheck_keywordはif文の中へ
                 key = check_keyword(tweet, [reply_only, mention_and_reply])
                 @responder = @resp_reply
-            elsif check_keyword(tweet, [mention_only, mention_and_reply])   # mentionの場合
-                # 制御構文のなかでの代入はRubyでは警告が出るらしいので
-                key = check_keyword(tweet, [mention_only, mention_and_reply])
+            elsif key = check_keyword(tweet, [mention_only, mention_and_reply])   # mentionの場合
                 @responder = @resp_mention
             end
 
@@ -71,9 +69,9 @@ class Character
 
         # RegularResponderだけは時間をキーとしていれるので別処理
         # 3~6時以外で1時間に1度動作
-        # if (@new_time.hour <= 3 or @new_time.hour >= 6) and @new_time.min == 0 then
-        if (@new_time.hour <= 3 or @new_time.hour >= 6) and
-           (@new_time.min == 0 or @new_time.min == 1 or @new_time.min == 2) then
+        #if (@new_time.hour <= 3 or @new_time.hour >= 6) and
+        #   (@new_time.min == 0 or @new_time.min == 1 or @new_time.min == 2) then
+        if (@new_time.hour <= 3 or @new_time.hour >= 6) and @new_time.min == 0 then
             # 引数は関係ないのでnilを渡す
             res = @resp_regular.response(nil, nil)
             # resがnilだった場合は飛ばす
