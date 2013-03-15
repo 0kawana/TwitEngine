@@ -98,7 +98,7 @@ class Character
             next unless layers.include?(ptn_item.layer)
             ptn_item.phrases.each do |phrase|
                 # マッチしていたらkeyを返す
-                return key if tweet.text.include?(phrase)
+                return key if tweet.text =~ /#{phrase}/
             end
         end
         return nil
