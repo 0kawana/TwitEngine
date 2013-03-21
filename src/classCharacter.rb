@@ -38,8 +38,8 @@ class Character
             @responder = nil        # 初期値はnil
             # @responderとkeyの決定
             if tweet.text.include?("@#{NAME}")    # replyの場合
-                if tweet.text =~ /(はじ|初|始)めまして。(.*?)です。/
-                    @dictionary.update_name(tweet.user.id.to_s, $2)
+                if tweet.text =~ /(はじ|初|始)めまして(。|、)?(.*?)です/
+                    @dictionary.update_name(tweet.user.id.to_s, $3)
                 end
                 # replyの場合は応答できるものがなくても構わないのでcheck_keywordはif文の中へ
                 key = check_keyword(tweet, [reply_only, mention_and_reply])
