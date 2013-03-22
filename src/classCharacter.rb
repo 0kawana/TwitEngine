@@ -94,9 +94,10 @@ class Character
     def check_keyword(tweet, layers)
         # ハッシュを走査
         @dictionary.pattern.each_pair do |key, ptn_item|
-            # 指定されていないlayerの場合はとばす
-            next unless layers.include?(ptn_item.layer)
-            ptn_item.phrases.each do |phrase|
+            # phraseとlayerを同時に走査
+            ptn_item.phrases.zip(ptn_item.layer).each do |phrase, layer|
+                # 指定されていないlayerの場合はとばす
+                next unless layers.include?(layer)
                 # マッチしていたらkeyを返す
                 return key if tweet.text =~ /#{phrase}/
             end

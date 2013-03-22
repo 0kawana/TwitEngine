@@ -77,6 +77,7 @@ class Dictionary
             mood = line["mood"].to_i
             if @pattern.has_key?(type)     # typeがすでに存在している場合
                 @pattern[type].add_phrase(phrase)
+                @pattern[type].add_layer(layer)
             else        # 存在していない場合はPatternItemオブジェクトを生成
                 @pattern[type] = PatternItem.new(phrase, layer, mood)
             end
@@ -187,8 +188,13 @@ class PatternItem < Item
     # 初期化
     def initialize(phrase, layer, mood)
         super(phrase)
-        @layer = layer
+        @layer = [layer]
         @mood = mood
+    end
+
+    # phrasesに追加
+    def add_layer(layer)
+        @layer.push(layer)
     end
 
     # アクセサの追加
