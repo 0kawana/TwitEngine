@@ -68,9 +68,9 @@ class Mary
         tweet_post(post)
         # フォロー・フォロワーの整理
         # if @new_time.hour == 4 and (@new_time.min == 0 or @new_time.min == 1 or @new_time.min == 3)
-        if @new_time.hour == 4 and @new_time.min == 0 # 一番人がいなさそうな午前４時で
+        #if @new_time.hour == 4 and @new_time.min == 0 # 一番人がいなさそうな午前４時で
             @mary.adjust_user
-        end
+        #end
 
         html = "Action successful!!<BR>
                 #{@old_time.mon}/#{@old_time.day},#{@old_time.hour}:#{@old_time.min}:#{@old_time.sec} ~ #{@new_time.mon}/#{@new_time.day},#{@new_time.hour}:#{@new_time.min}:#{@new_time.sec}"
