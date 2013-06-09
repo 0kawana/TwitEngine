@@ -25,7 +25,7 @@ end
 
 query = <<SQL
 CREATE TABLE response (
-    no int PRIMARY KEY,
+    no serial PRIMARY KEY,
     type text,
     phrase text,
     mood int,
@@ -42,7 +42,10 @@ CREATE TABLE response (
 SQL
 conn.exec(query)
 
-conn.exec("COPY response FROM '#{dir}/response.csv' WITH CSV")
+conn.exec("COPY response(type, phrase, mood, act_time00_03, act_time03_06,
+                         act_time06_09, act_time09_12, act_time12_15, act_time15_18,
+                         act_time18_21, act_time21_24, exist)
+           FROM '#{dir}/response.csv' WITH CSV")
 
 # パターン辞書
 begin
@@ -56,7 +59,7 @@ end
 
 query = <<SQL
 CREATE TABLE pattern (
-    no int PRIMARY KEY,
+    no serial PRIMARY KEY,
     type text,
     phrase text,
     layer int,
@@ -66,7 +69,7 @@ CREATE TABLE pattern (
 SQL
 conn.exec(query)
 
-conn.exec("COPY pattern FROM '#{dir}/pattern.csv' WITH CSV")
+conn.exec("COPY pattern(type, phrase, layer, mood, exist) FROM '#{dir}/pattern.csv' WITH CSV")
 
 # 定期用辞書
 begin
@@ -80,7 +83,7 @@ end
 
 query = <<SQL
 CREATE TABLE regular (
-    no int PRIMARY KEY,
+    no serial PRIMARY KEY,
     phrase text,
     hour int,
     exist boolean
@@ -88,6 +91,6 @@ CREATE TABLE regular (
 SQL
 conn.exec(query)
 
-conn.exec("COPY regular FROM '#{dir}/regular.csv' WITH CSV")
+conn.exec("COPY regular(phrase, hour, exist) FROM '#{dir}/regular.csv' WITH CSV")
 
 

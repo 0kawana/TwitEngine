@@ -1,5 +1,10 @@
 
-filename = "response"
+filename = ARGV[0]
+
+if filename.nil?
+    puts "error"
+    exit
+end
 
 File.open("#{filename}.csv", "w") do |file|
     f = File.read("#{filename}_drive.txt")
