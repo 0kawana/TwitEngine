@@ -16,24 +16,41 @@ require File.expand_path(File.dirname(__FILE__) + '/classDictionary.rb')
 # Characterクラス
 #=================================================
 class Character
-    # initialize(ControlTwitter obj, Time obj)
-    def initialize(ctrl_twit, new_time)
+    MENTION = 0
+    REPLY = 1
+    MENTION_REPLY = 2
+
+    # @param twit_ctrl [TwitterControl]
+    # @param new_time [Time]
+    def initialize(twit_ctrl, new_time)
+        @twit_ctrl = twit_ctrl
+        @new_time = new_time
     end
 
-    # dialogue(Array[Twitter obj])
+    # @param timeline [Array<Tweet>]
+    # @return [Array<Hash>]
     def dialogue(timeline)
+        posts = []
+        posts = [
+            {"response" => "hoge", "options" => {}},
+            {"response" => "@Sharnoth_Mary かわいい", "options" => {}},
+            {"response" => "hoge", "options" => {"in_reply_to" => 1234}},
+            {"response" => "@Sharnoth_Mary おはよう", "options" => {"in_reply_to" => 123}}
+        ]
+        return posts
     end
 
     protected
-    # search_type(Twitter obj, Array[Int])
+    # @param tweet [Tweet]
+    # @param tweet [Array<Integer>]
     def search_type(tweet, layers)
     end
 
-    # check_time?
+    # @return [Boolean]
     def check_time?
     end
 
-    # check_introduce?(String)
+    # @return [Boolean]
     def check_introduce?(text)
     end
 end
@@ -46,15 +63,15 @@ class Emotion
     MOOD_MAX = 30
     MOOD_RECOVERY = 1
 
-    # initialize(Dictionary obj)
+    # @param dict [Dictionary]
     def initialize(dict)
     end
 
-    # update_mood(id_str, val)
+    # @param id_str [String]
+    # @param val [Integer]
     def update_mood(id_str, val)
     end
 
-    # ajust_mood
     def ajust_mood
     end
 end
