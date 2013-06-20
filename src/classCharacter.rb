@@ -22,15 +22,19 @@ class Character
 
     # @param twit_ctrl [TwitterControl]
     # @param new_time [Time]
-    def initialize(twit_ctrl, new_time)
+    # @param ajust_time [Time or Float]
+    def initialize(twit_ctrl, new_time, ajust_time)
         @twit_ctrl = twit_ctrl
         @new_time = new_time
+        @ajust_time = ajust_time
+        @dictionary = Dictionary.new(@twit_ctrl, @new_time, @ajust_time)
     end
 
     # @param timeline [Array<Tweet>]
     # @return [Array<Hash>]
     def dialogue(timeline)
         posts = []
+
         posts = [
             {"response" => "hoge", "options" => {}},
             {"response" => "@Sharnoth_Mary かわいい", "options" => {}},

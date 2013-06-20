@@ -20,7 +20,7 @@ class Mary
         @twit_ctrl = TwitterControl.new
         @old_time = get_oldtime()
         @new_time = get_newtime()
-        @character = Character.new(@twit_ctrl, @new_time)
+        @character = Character.new(@twit_ctrl, @new_time, ajust_time(0.0))
     end
 
     # @return [String]
@@ -31,7 +31,7 @@ class Mary
         timeline += @twit_ctrl.get_timeline(@old_time, @new_time, ajust_time(0.0))
 
         posts = @character.dialogue(timeline)
-        @twit_ctrl.tweet_posts(posts)
+        #@twit_ctrl.tweet_posts(posts)
 
         html = "Action Successfull!!<BR>
         #{@old_time.mon}/#{@old_time.day},#{@old_time.hour}:#{@old_time.min}:#{@old_time.sec} ~

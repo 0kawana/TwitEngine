@@ -20,15 +20,7 @@ class TwitterControl
     def initialize
         #@twitter = Twitter
         @twitter = TestTwitter
-    end
-
-    def configure
-        @twitter.configure do |config|
-            config.consumer_key       = ENV['CONSUMER_KEY']
-            config.consumer_secret    = ENV['CONSUMER_SECRET']
-            config.oauth_token        = ENV['OAUTH_TOKEN']
-            config.oauth_token_secret = ENV['OAUTH_TOKEN_SECRET']
-        end
+        set_config()
     end
 
     # @param posts [Array<Hash>]
@@ -50,7 +42,7 @@ class TwitterControl
         mentions = []
         @twitter.mentions.each do |tweet|
             created_at = tweet.created_at + ajust_time
-            break unless old_time < created_at || created_at <= new_time
+            break unless between_time?(old_time, created_at, new_time)
             mentions << tweet
         end
         return mentions
@@ -64,22 +56,51 @@ class TwitterControl
         timeline = []
         @twitter.home_timeline.each do |tweet|
             created_at = tweet.created_at + ajust_time
-            break unless old_time < created_at || created_at <= new_time
+            break unless between_time?(old_time, created_at, new_time)
             next if tweet.user.screen_name == NAME || check_include?(tweet.text)
             timeline << tweet
         end
         return timeline
     end
 
+    # @param name [String]
+    # @param options [Hash]
+    # @param new_time [Time]
+    # @param ajust_time [Time or Float]
+    # @return [Array<String>]
+    def get_nearlytweet(name, options, new_time, ajust_time)
+        before = 23*60*60
+        nearly = []
+        @twitter.home_timeline(name, options).each do |tweet|
+            created_at = tweet.created_at + ajust_time
+            break unless between_time?(new_time-before, created_at, new_time)
+            nearly << tweet.text
+        end
+        return nearly
+    end
+
     protected
+    def set_config
+        @twitter.configure do |config|
+            config.consumer_key       = ENV['CONSUMER_KEY']
+            config.consumer_secret    = ENV['CONSUMER_SECRET']
+            config.oauth_token        = ENV['OAUTH_TOKEN']
+            config.oauth_token_secret = ENV['OAUTH_TOKEN_SECRET']
+        end
+    end
+
     # @param text [String]
     # @return [Boolean]
     def check_include?(text)
         return text.include?("@") || text.include?("#")
-        #if text.include?("@") || text.include?("#")
-        #    return true
-        #end
-        #return false
+    end
+
+    # @param before [Time]
+    # @param base [Time]
+    # @param after [Time]
+    # @return [Boolean]
+    def between_time?(before, base, after)
+        return before < base || base <= after
     end
 
     # def user(id)
@@ -102,13 +123,5 @@ class TwitterControl
     #     @twitter::unfollow(id)
     # end
 end
-
-#p TwitterControl.new.configure
-#p TwitterControl.new.user(20)
-#p TwitterControl.new.user_timeline
-#p TwitterControl.new.follower_ids("sebas_m3")
-#p TwitterControl.new.friend_ids("sebas_m3")
-#p TwitterControl.new.follow(123)
-#p TwitterControl.new.unfollow(123)
 
 
