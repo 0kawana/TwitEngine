@@ -5,7 +5,7 @@
 # Dictionaryクラス
 #-----------------------------------------------------------
 # Author : gembaf
-# 2013/06/17
+# 2013/06/22
 #===========================================================
 
 require 'pg'
@@ -40,15 +40,67 @@ class Dictionary
         @nearlytweet.pop if @nearlytweet.size > 15
     end
 
-    protected
+    # @param user_key [String]
+    # @param name [String]
+    def update_user_name(user_key, name)
+        @userdata[user_key].update_name(name)
+    end
+
+    # @param user_key [String]
+    # @param mood [Integer]
+    def update_user_mood(user_key, mood)
+        @userdata[user_key].update_mood(mood)
+    end
+
+    def update_users
+        @userdata.each_pair do |key, value|
+            next unless value.update_flag
+            query = "UPDATE userdata
+                     SET user_name='#{value.user_name}', user_mood='#{value.user_mood}'
+                     WHERE user_key=#{key} AND exist='t'"
+            db_connect(query)
+        end
+    end
+
+    # @param users_key [Array<Integer>]
+    def remove_users(users_key)
+        users_key.each do |user_key|
+            query = "UPDATE userdata SET exist='f' WHERE user_key=#{user_key}"
+            db_connect(query)
+        end
+    end
+
+    # @param users_key [Array<Integer>]
+    def regist_users(users_key)
+        users_key.each do |user_key|
+            query = "SELECT * FROM userdata WHERE user_key=#{user_key}"
+            res = db_connect(query)
+            if res.empty?
+                user_name = @twit_ctrl.get_user_name(user_key)
+                query = "INSERT INTO userdata VALUES(#{user_key}, '#{user_name}', 0, 0, 't')"
+            else
+                query = "UPDATE userdata SET exist='t' WHERE user_key=#{user_key}"
+            end
+            db_connect(query)
+        end
+    end
+
+
+    private
     def set_conn
-        @conn = PGconn.connect('localhost', 5432, '', '', 'mary_db', 'gembaf', 'hoge')
+        @conn = PGconn.connect('localhost', 5432, '', '', 'mary_db', 'gembaf', 'hoge')  #=> local
+        # @conn = PGconn.connect(ENV['HOST'], 5432, '', '', ENV['DB_NAME'], ENV['USER_NAME'], ENV['PASSWORD'])   #=> heroku
     end
 
     # @param query [String]
     # @return [Array<PG::Result>]
     def db_connect(query)
-        res = @conn.exec(query)
+        begin
+            res = @conn.exec(query)
+        rescue
+            # p "DB Conect Error"
+            res = []
+        end
         return res.to_a
     end
 
@@ -157,13 +209,32 @@ end
 # UserElemクラス
 #=================================================
 class UserElem
-    attr_reader :user_name, :user_mood
+    attr_reader :user_name, :user_mood, :update_flag
 
     # @param name [String]
     # @param mood [Integer]
     def initialize(name, mood)
         @user_name = name
         @user_mood = mood
+        @update_flag = false
+    end
+
+    # @param name [String]
+    def update_name(name)
+        @user_name = name
+        update_flag()
+    end
+
+    # @param mood [Integer]
+    def update_mood(mood)
+        @user_mood = mood
+        update_flag()
+    end
+
+
+    private
+    def update_flag
+        @update_flag = true
     end
 end
 
