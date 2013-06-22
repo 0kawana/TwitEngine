@@ -11,6 +11,7 @@
 
 require File.expand_path(File.dirname(__FILE__) + '/classResponder.rb')
 require File.expand_path(File.dirname(__FILE__) + '/classDictionary.rb')
+require File.expand_path(File.dirname(__FILE__) + '/_classTestDictionary.rb')
 
 #=================================================
 # Characterクラス
@@ -28,6 +29,8 @@ class Character
         @new_time = new_time
         @ajust_time = ajust_time
         @dictionary = Dictionary.new(@twit_ctrl, @new_time, @ajust_time)
+        #@dictionary = TestDictionary.new(@twit_ctrl, @new_time, @ajust_time)  #=> debug
+        @emotion = Emotion.new(@dictionary)
     end
 
     # @param timeline [Array<Tweet>]
@@ -44,7 +47,7 @@ class Character
         return posts
     end
 
-    protected
+    private
     # @param tweet [Tweet]
     # @param tweet [Array<Integer>]
     def search_type(tweet, layers)

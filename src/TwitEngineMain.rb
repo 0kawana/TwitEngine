@@ -40,7 +40,7 @@ class Mary
     end
 
 
-    protected
+    private
     # @param time [Time or Float]
     # @return [Time or Float]
     def ajust_time(time)

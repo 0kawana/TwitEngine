@@ -71,7 +71,7 @@ class TwitterControl
     def get_nearlytweet(name, options, new_time, ajust_time)
         before = 23*60*60
         nearly = []
-        @twitter.home_timeline(name, options).each do |tweet|
+        @twitter.user_timeline(name, options).each do |tweet|
             created_at = tweet.created_at + ajust_time
             break unless between_time?(new_time-before, created_at, new_time)
             nearly << tweet.text
@@ -79,7 +79,13 @@ class TwitterControl
         return nearly
     end
 
-    protected
+    # @param user_key [Integer]
+    # @return [String]
+    def get_user_name(user_key)
+        return @twitter.user(user_key).name
+    end
+
+    private
     def set_config
         @twitter.configure do |config|
             config.consumer_key       = ENV['CONSUMER_KEY']

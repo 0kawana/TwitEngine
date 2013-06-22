@@ -28,16 +28,33 @@ module TestTwitter
         puts "#{response}, #{options}"
     end
 
-    # @ex Twitter.user_timeline("sebas_m3", "count" => 15)
-    # @param name [String]
+    # @ex Twitter.home_timeline("count" => 15)
     # @param options [Hash]
     # @return [Array<Tweet>]
-    def home_timeline(name = NAME, options = {})
+    def home_timeline(options = {})
         data = [
             {"text" => "メアリ", "created_at" => Time.new, "name" => "Sharnoth_Mary"},
             {"text" => "おはよう", "created_at" => Time.new, "name" => "sebas_m3"},
             {"text" => "ほげ", "created_at" => Time.new, "name" => "test_user"},
             {"text" => "test #test", "created_at" => Time.new, "name" => "sebas_m3"},
+        ]
+        timeline = []
+        data.each do |d|
+            timeline << Tweet.new(d["text"], d["created_at"], d["name"])
+        end
+        return timeline
+    end
+
+    # @ex Twitter.user_timeline("sebas_m3", "count" => 15)
+    # @param name [String]
+    # @param options [Hash]
+    # @return [Array<Tweet>]
+    def user_timeline(name, options = {})
+        data = [
+            {"text" => "おはようございます", "created_at" => Time.new, "name" => name},
+            {"text" => "おやすみなさい", "created_at" => Time.new, "name" => name},
+            {"text" => "どういたしまして", "created_at" => Time.new, "name" => name},
+            {"text" => "ごきげんよう", "created_at" => Time.new, "name" => name},
         ]
         timeline = []
         data.each do |d|
@@ -112,8 +129,8 @@ module TestTwitter
         return true
     end
 
-    module_function :configure, :update, :home_timeline, :mentions, :user,
-                    :follower_ids, :friend_ids, :follow, :unfollow
+    module_function :configure, :update, :home_timeline, :user_timeline, :mentions,
+                    :user, :follower_ids, :friend_ids, :follow, :unfollow
 end
 
 

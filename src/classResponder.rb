@@ -25,7 +25,7 @@ class Responder
         return {}
     end
 
-    protected
+    private
     # check_response?(String)
     def check_response?(resp)
     end
