@@ -36,12 +36,12 @@ class TwitterControl
 
     # @param old_time [Time]
     # @param new_time [Time]
-    # @param ajust_time [Time or Float]
+    # @param adjust_time [Time or Float]
     # @return [Array<Tweet>]
-    def get_mentions(old_time, new_time, ajust_time)
+    def get_mentions(old_time, new_time, adjust_time)
         mentions = []
         @twitter.mentions.each do |tweet|
-            created_at = tweet.created_at + ajust_time
+            created_at = tweet.created_at + adjust_time
             break unless between_time?(old_time, created_at, new_time)
             mentions << tweet
         end
@@ -50,12 +50,12 @@ class TwitterControl
 
     # @param old_time [Time]
     # @param new_time [Time]
-    # @param ajust_time [Time or Float]
+    # @param adjust_time [Time or Float]
     # @return [Array<Tweet>]
-    def get_timeline(old_time, new_time, ajust_time)
+    def get_timeline(old_time, new_time, adjust_time)
         timeline = []
         @twitter.home_timeline.each do |tweet|
-            created_at = tweet.created_at + ajust_time
+            created_at = tweet.created_at + adjust_time
             break unless between_time?(old_time, created_at, new_time)
             next if tweet.user.screen_name == NAME || check_include?(tweet.text)
             timeline << tweet
@@ -66,13 +66,13 @@ class TwitterControl
     # @param name [String]
     # @param options [Hash]
     # @param new_time [Time]
-    # @param ajust_time [Time or Float]
+    # @param adjust_time [Time or Float]
     # @return [Array<String>]
-    def get_nearlytweet(name, options, new_time, ajust_time)
+    def get_nearlytweet(name, options, new_time, adjust_time)
         before = 23*60*60
         nearly = []
         @twitter.user_timeline(name, options).each do |tweet|
-            created_at = tweet.created_at + ajust_time
+            created_at = tweet.created_at + adjust_time
             break unless between_time?(new_time-before, created_at, new_time)
             nearly << tweet.text
         end
@@ -83,6 +83,32 @@ class TwitterControl
     # @return [String]
     def get_user_name(user_key)
         return @twitter.user(user_key).name
+    end
+
+    # @param name [String]
+    # @return [Array<Integer>]
+    def follower_ids(name)
+        return @twitter.follower_ids(name).ids
+    end
+
+    # @param name [String]
+    # @return [Array<Integer>]
+    def friend_ids(name)
+        return @twitter.friend_ids(name).ids
+    end
+
+    # @param id [Array<Integer>]
+    def follow(ids)
+        ids.each do |id|
+            @twitter.follow(id)
+        end
+    end
+
+    # @param id [Array<Integer>]
+    def unfollow(ids)
+        ids.each do |id|
+            @twitter.unfollow(id)
+        end
     end
 
     private
@@ -108,26 +134,6 @@ class TwitterControl
     def between_time?(before, base, after)
         return before < base || base <= after
     end
-
-    # def user(id)
-    #     return @twitter::user(id).name
-    # end
-
-    # def follower_ids(name)
-    #     return @twitter::follower_ids(name).ids
-    # end
-
-    # def friend_ids(name)
-    #     return @twitter::friend_ids(name).ids
-    # end
-
-    # def follow(id)
-    #     @twitter::follow(id)
-    # end
-
-    # def unfollow(id)
-    #     @twitter::unfollow(id)
-    # end
 end
 
 

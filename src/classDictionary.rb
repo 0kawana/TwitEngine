@@ -18,11 +18,11 @@ class Dictionary
 
     # @param twit_ctrl [TwitterControl]
     # @param new_time [Time]
-    # @param ajust_time [Time or Float]
-    def initialize(twit_ctrl, new_time, ajust_time)
+    # @param adjust_time [Time or Float]
+    def initialize(twit_ctrl, new_time, adjust_time)
         @twit_ctrl = twit_ctrl
         @new_time = new_time
-        @ajust_time = ajust_time
+        @adjust_time = adjust_time
         @conn = nil
         @regular = []
         @response = {}
@@ -172,7 +172,7 @@ class Dictionary
     end
 
     def set_nearlytweet
-        @nearlytweet += @twit_ctrl.get_nearlytweet(NAME, {"count" => 15}, @new_time, @ajust_time)
+        @nearlytweet += @twit_ctrl.get_nearlytweet(NAME, {"count" => 15}, @new_time, @adjust_time)
     end
 end
 

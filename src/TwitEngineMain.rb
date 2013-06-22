@@ -20,18 +20,19 @@ class Mary
         @twit_ctrl = TwitterControl.new
         @old_time = get_oldtime()
         @new_time = get_newtime()
-        @character = Character.new(@twit_ctrl, @new_time, ajust_time(0.0))
+        @character = Character.new(@twit_ctrl, @new_time, adjust_time(0.0))
     end
 
     # @return [String]
     def tweet
         write_newtime()
         timeline = []
-        timeline += @twit_ctrl.get_mentions(@old_time, @new_time, ajust_time(0.0))
-        timeline += @twit_ctrl.get_timeline(@old_time, @new_time, ajust_time(0.0))
+        timeline += @twit_ctrl.get_mentions(@old_time, @new_time, adjust_time(0.0))
+        timeline += @twit_ctrl.get_timeline(@old_time, @new_time, adjust_time(0.0))
 
         posts = @character.dialogue(timeline)
         #@twit_ctrl.tweet_posts(posts)
+        # @character.adjust_user
 
         html = "Action Successfull!!<BR>
         #{@old_time.mon}/#{@old_time.day},#{@old_time.hour}:#{@old_time.min}:#{@old_time.sec} ~
@@ -43,7 +44,7 @@ class Mary
     private
     # @param time [Time or Float]
     # @return [Time or Float]
-    def ajust_time(time)
+    def adjust_time(time)
         #time += 9*60*60   #=> heroku(もとがGMTなので)
         return time
     end
@@ -54,13 +55,13 @@ class Mary
 
         log = File.read("./Runtime.log").split(",")
         t = Time.local(*log)
-        old_time = ajust_time(t.localtime)
+        old_time = adjust_time(t.localtime)
         return old_time
     end
 
     # @return [Time]
     def get_newtime
-        time = ajust_time(Time.new)
+        time = adjust_time(Time.new)
         return time
     end
 
