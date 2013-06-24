@@ -28,8 +28,14 @@ class Character
         @twit_ctrl = twit_ctrl
         @new_time = new_time
         @adjust_time = adjust_time
+
         @dictionary = Dictionary.new(@twit_ctrl, @new_time, @adjust_time)
         #@dictionary = TestDictionary.new(@twit_ctrl, @new_time, @adjust_time)  #=> debug
+
+        @resp_regular = RegularResponder.new("Regular", @dictionary)
+        @resp_reply = ReplyResponder.new("Reply", @dictionary)
+        @resp_mention = MentionResponder.new("Mention", @dictionary)
+
         @emotion = Emotion.new(@dictionary)
     end
 
@@ -38,12 +44,40 @@ class Character
     def dialogue(timeline)
         posts = []
 
-        posts = [
-            {"response" => "hoge", "options" => {}},
-            {"response" => "@Sharnoth_Mary かわいい", "options" => {}},
-            {"response" => "hoge", "options" => {"in_reply_to" => 1234}},
-            {"response" => "@Sharnoth_Mary おはよう", "options" => {"in_reply_to" => 123}}
-        ]
+        timeline.each do |tweet|
+            if tweet.text.include?("@#{NAME}")      # Reply
+                # introduce_check(tweet)
+                type = search_type(tweet.text, [REPLY, MENTION_REPLY])
+                responder = @resp_reply
+            else                                    # Mention
+                type = search_type(tweet.text, [MENTION, MENTION_REPLY])
+                next if type.empty?
+                responder = @resp_mention
+            end
+
+            response = responder.get_response(tweet, type)
+            next if response.empty?
+            options = responder.get_options(tweet)
+            @dictionary.update_nearlytweet(response)
+            posts << {"response" => response, "options" => options}
+
+            unless type.empty?
+                # テヘペロッ
+                @emotion.update_mood(tweet.user.id.to_s, @dictionary.pattern[type].moods.sample)
+            end
+        end
+
+        # Regular
+        if check_time?()
+            response = @resp_regular.get_response
+            options = @resp_regular.get_options
+            unless response.empty?
+                posts << {"response" => response, "options" => options}
+            end
+            @emotion.adjust_mood()
+        end
+
+        # @dictionary.update_users()
         return posts
     end
 
@@ -52,6 +86,8 @@ class Character
         friends = @twit_ctrl.friend_ids(NAME)
         removes = friends - followers 
         registers = followers - friends
+        removes.reverse!
+        registers.reverse!
 
         @dictionary.remove_users(removes)
         @dictionary.regist_users(registers)
@@ -62,17 +98,31 @@ class Character
 
 
     private
-    # @param tweet [Tweet]
+    # @param tweet [String]
     # @param tweet [Array<Integer>]
-    def search_type(tweet, layers)
+    # @return [String]
+    def search_type(text, layers)
+        @dictionary.pattern.each_pair do |key, value|
+            elem = value.phrases.zip(value.layers)
+            elem.each do |phrase, layer|
+                next unless layers.include?(layer)
+                return key if text =~ /#{phrase}/
+            end
+        end
+        return ""
+    end
+
+    # @param tweet [Tweet]
+    def introduce_check(tweet)
+        if tweet.text =~ /(はじ|初|始)めまして(、|。)?(.*?)です/
+            @dictionary.update_user_name(tweet.user.id.to_s, $3)
+        end
     end
 
     # @return [Boolean]
     def check_time?
-    end
-
-    # @return [Boolean]
-    def check_introduce?(text)
+        # return (@new_time.hour <= 3 || @new_time.hour >= 6)
+        return (@new_time.hour <= 3 || @new_time.hour >= 6) && @new_time.min == 0
     end
 end
 
@@ -95,7 +145,7 @@ class Emotion
         mood = @dict.userdata[user_key].user_mood + val
         mood = MOOD_MAX if mood > MOOD_MAX
         mood = MOOD_MIN if mood < MOOD_MIN
-        @dict.update_mood(user_key, mood)
+        @dict.update_user_mood(user_key, mood)
     end
 
     # @note 全ユーザの機嫌値を0に近づける
@@ -106,7 +156,7 @@ class Emotion
 
             mood -= MOOD_RECOVERY if mood > 0
             mood += MOOD_RECOVERY if mood < 0
-            @dict.update_mood(key, mood)
+            @dict.update_user_mood(key, mood)
         end
     end
 end
