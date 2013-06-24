@@ -6,6 +6,8 @@
 #-----------------------------------------------------------
 # Author : gembaf
 # 2013/06/22
+#-----------------------------------------------------------
+# heroku での動作の場合はset_conn() の変更が必要
 #===========================================================
 
 require 'pg'
@@ -54,7 +56,7 @@ class Dictionary
 
     def update_users
         @userdata.each_pair do |key, value|
-            next unless value.update_flag
+            next unless value.flag
             query = "UPDATE userdata
                      SET user_name='#{value.user_name}', user_mood='#{value.user_mood}'
                      WHERE user_key=#{key} AND exist='t'"
@@ -96,6 +98,7 @@ class Dictionary
     # @return [Array<PG::Result>]
     def db_connect(query)
         begin
+            # p query
             res = @conn.exec(query)
         rescue
             # p "DB Conect Error"
@@ -209,14 +212,14 @@ end
 # UserElemクラス
 #=================================================
 class UserElem
-    attr_reader :user_name, :user_mood, :update_flag
+    attr_reader :user_name, :user_mood, :flag
 
     # @param name [String]
     # @param mood [Integer]
     def initialize(name, mood)
         @user_name = name
         @user_mood = mood
-        @update_flag = false
+        @flag = false
     end
 
     # @param name [String]
@@ -234,7 +237,7 @@ class UserElem
 
     private
     def update_flag
-        @update_flag = true
+        @flag = true
     end
 end
 

@@ -7,6 +7,8 @@
 #-----------------------------------------------------------
 # Author : gembaf
 # 2013/06/17
+#-----------------------------------------------------------
+# heroku での動作の場合は adjust_time() の変更が必要
 #===========================================================
 
 require 'rubygems'
@@ -31,12 +33,17 @@ class Mary
         timeline += @twit_ctrl.get_timeline(@old_time, @new_time, adjust_time(0.0))
 
         posts = @character.dialogue(timeline)
-        #@twit_ctrl.tweet_posts(posts)
-        # @character.adjust_user
+        @twit_ctrl.tweet_posts(posts)
+
+        # 午前4時に全ユーザ情報の更新
+        if @new_time.hour == 4 && @new_time.min == 0
+            @character.adjust_user
+        end
 
         html = "Action Successfull!!<BR>
         #{@old_time.mon}/#{@old_time.day},#{@old_time.hour}:#{@old_time.min}:#{@old_time.sec} ~
         #{@new_time.mon}/#{@new_time.day},#{@new_time.hour}:#{@new_time.min}:#{@new_time.sec}"
+
         return html
     end
 

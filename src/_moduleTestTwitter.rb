@@ -37,6 +37,7 @@ module TestTwitter
             {"text" => "おはよう", "created_at" => Time.new, "name" => "sebas_m3"},
             {"text" => "ほげ", "created_at" => Time.new, "name" => "test_user"},
             {"text" => "test #test", "created_at" => Time.new, "name" => "sebas_m3"},
+            {"text" => "@sebas ごきげんよう", "created_at" => Time.new, "name" => name},
         ]
         timeline = []
         data.each do |d|
@@ -70,7 +71,9 @@ module TestTwitter
             {"text" => "@#{NAME} おはよう", "created_at" => Time.new, "name" => "sebas_m3"},
             {"text" => "@#{NAME} おやすみ", "created_at" => Time.new, "name" => "sebas_m3"},
             {"text" => "@#{NAME} かわいい", "created_at" => Time.new, "name" => "sebas_m3"},
-            {"text" => "@#{NAME} hoge #hoge", "created_at" => Time.new , "name" => "alice"}
+            {"text" => "@#{NAME} hoge #hoge", "created_at" => Time.new , "name" => "alice"},
+            {"text" => "@#{NAME} はじめまして、ほげです", "created_at" => Time.new , "name" => "alice"},
+            {"text" => "@#{NAME} アーシェについて教えて？", "created_at" => Time.new , "name" => "alice"}
         ]
         mention = []
         data.each do |d|
@@ -140,25 +143,20 @@ end
 # 特にいじる必要はなし
 #=================================================
 class Tweet
-    @@id = 0
-    attr_reader :text, :created_at
+    attr_reader :text, :created_at, :id
     def initialize(text, created_at, name = "test_user")
         @text = text
         @created_at = created_at
         @name = name
+        @id = 583737681
     end
 
-    # @note user.screen_name の実現
-    # @note user.id の実現 (id は10刻み)
+    # @note user.screen_name
     def user
         return self
     end
     def screen_name
         return @name
-    end
-    def id
-        @@id += 10
-        return @@id
     end
 end
 

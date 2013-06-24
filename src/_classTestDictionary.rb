@@ -22,11 +22,13 @@ class TestDictionary < Dictionary
     end
 
     # @note Override
+    # @param users_key [Array<Integer>]
     def remove_users(users_key)
         # Dummy
     end
 
     # @note Override
+    # @param users_key [Array<Integer>]
     def regist_users(users_key)
         # Dummy
     end
